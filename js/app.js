@@ -2,13 +2,13 @@
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
 // Function to play a SOUND
-async function playSound({channel, pitch, duration, volume}) {
+async function playSound({channel, pitch, duration, volume, waveform}) {
   return new Promise(
     resolve => {
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
 
-      oscillator.type = 'sine'; // Default waveform type
+      oscillator.type = waveform;
       // pitch is in quarter-semitones from middle C
       const multiplier = Math.pow(2, (pitch - 53) / 48);
       console.log(pitch)
@@ -51,20 +51,22 @@ async function playEnvelope(number, attack, decay, sustain, release, peak, susta
 }
 
 document.getElementById("playSound").addEventListener('click', async () => {
+  const waveform = document.getElementById("waveform").value;
   const pitchShift = parseInt(document.getElementById("pitchShift").value);
   const baseDuration = parseInt(document.getElementById("baseDuration").value);
 
   const commands = document.getElementById("commands").value.split('\n');
   for (let i = 0; i < commands.length; i++) {
-    const pitches = commands[i].split(',');
+    const [duration, ...pitches] = commands[i].split(',');
     await Promise.all(
       pitches.map((pitch, i) => {
           return playSound(
             {
               channel: i,
               pitch: parseInt(pitch.trim()) + pitchShift,
-              duration: baseDuration,
-              volume: 15 / Math.pow(4, i)
+              duration: baseDuration * duration,
+              volume: 15 / Math.pow(4, i),
+              waveform
             });
         }
       )
